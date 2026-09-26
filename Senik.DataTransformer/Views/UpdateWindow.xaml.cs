@@ -104,14 +104,18 @@ namespace Senik.DataTransformer.Views.Windows
                     window.BadgeMandatory.Visibility = Visibility.Visible;
                     window.BadgeOptional.Visibility = Visibility.Collapsed;
                     window.BtnCancel.Visibility = Visibility.Collapsed;
+                    window.BtnCancel.IsEnabled = false;
                     window.BtnCloseWindow.Visibility = Visibility.Collapsed;
+                    window.BtnCloseWindow.IsEnabled = false;
                 }
                 else
                 {
                     window.BadgeMandatory.Visibility = Visibility.Collapsed;
                     window.BadgeOptional.Visibility = Visibility.Visible;
                     window.BtnCancel.Visibility = Visibility.Visible;
+                    window.BtnCancel.IsEnabled = true;
                     window.BtnCloseWindow.Visibility = Visibility.Visible;
+                    window.BtnCloseWindow.IsEnabled = true;
                 }
 
                 window.ShowDialog();
@@ -136,7 +140,7 @@ namespace Senik.DataTransformer.Views.Windows
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
-            if (_isMandatory && !_isDownloaded)
+            if (_isMandatory)
             {
                 Application.Current.Shutdown();
                 return;
@@ -149,6 +153,8 @@ namespace Senik.DataTransformer.Views.Windows
             if (!_isDownloaded)
             {
                 BtnAction.IsEnabled = false;
+                BtnCancel.IsEnabled = false;
+                BtnCloseWindow.IsEnabled = false;
                 BtnAction.Content = "⏳ در حال دریافت...";
                 PanelProgress.Visibility = Visibility.Visible;
                 PbDownload.Value = 0;
@@ -167,6 +173,8 @@ namespace Senik.DataTransformer.Views.Windows
                     _isDownloaded = true;
                     TxtProgressStatus.Text = "✅ فایل به‌روزرسانی با موفقیت دریافت شد.";
                     BtnAction.IsEnabled = true;
+                    BtnCancel.IsEnabled = false;
+                    BtnCloseWindow.IsEnabled = false;
                     BtnAction.Content = "🔄 راه‌اندازی مجدد و اعمال نسخه جدید";
                 }
                 catch (Exception ex)
@@ -174,6 +182,11 @@ namespace Senik.DataTransformer.Views.Windows
                     MessageBox.Show($"خطا در دریافت فایل آپدیت: {ex.Message}", "خطا", MessageBoxButton.OK, MessageBoxImage.Error);
                     UpdateService.LogError(ex);
                     BtnAction.IsEnabled = true;
+                    if (!_isMandatory)
+                    {
+                        BtnCancel.IsEnabled = true;
+                        BtnCloseWindow.IsEnabled = true;
+                    }
                     BtnAction.Content = "🔁 تلاش مجدد";
                     PanelProgress.Visibility = Visibility.Collapsed;
                 }

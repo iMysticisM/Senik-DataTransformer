@@ -104,7 +104,11 @@ namespace Senik.DataTransformer.ViewModels
         [RelayCommand]
         private void OpenMapping()
         {
-            if (string.IsNullOrEmpty(SelectedSheet) || _currentHeaders.Count == 0) return;
+            if (string.IsNullOrEmpty(SelectedSheet) || _currentHeaders.Count == 0)
+            {
+                SenikDialog.Show("لطفا ابتدا فایل اکسل و شیت معتبر را انتخاب کنید.", "اخطار", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
             AdvancedMappingWindow mappingWindow = new AdvancedMappingWindow(_currentHeaders, SavedMappings, "Kala");
             if (Application.Current.MainWindow != null) mappingWindow.Owner = Application.Current.MainWindow;
             if (mappingWindow.ShowDialog() == true)

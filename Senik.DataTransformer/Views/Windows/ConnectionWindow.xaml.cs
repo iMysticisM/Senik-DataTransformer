@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace Senik.DataTransformer.Views.Windows
@@ -55,12 +56,12 @@ namespace Senik.DataTransformer.Views.Windows
             }
         }
 
-        // 🟢 تغییر ۳: جستجوی فوق‌سریع سرورهای Local از طریق Registry ویندوز (بدون هنگ کردن شبکه)
+        // 🟢 جستجوی فوق‌سریع و دقیق سرورهای SQL بدون فریز شدن و حذف نام خام رایانه بدون نمونه
         private async Task DiscoverSqlServersAsync()
         {
             try
             {
-                // 🔒 قفل کردن هر دو اِلمان در شروع جستجو (چه در اجرای اول، چه با کلیک)
+                // 🔒 قفل کردن المان‌ها در شروع جستجو
                 if (BtnRefreshServers != null) BtnRefreshServers.IsEnabled = false;
 
                 MaterialDesignThemes.Wpf.HintAssist.SetHint(CmbServers, "در حال جستجو در شبکه (ممکن است زمان‌بر باشد)...");
@@ -70,8 +71,44 @@ namespace Senik.DataTransformer.Views.Windows
                 var servers = await Task.Run(() =>
                 {
                     var list = new System.Collections.Generic.List<string>();
-                    list.Add(Environment.MachineName);
+                    bool hasDefaultInstance = false;
 
+                    // ۱. جستجوی فوق‌سریع نمونه‌های محلی از طریق رجیستری ویندوز
+                    try
+                    {
+                        string[] regPaths = new[]
+                        {
+                            @"SOFTWARE\Microsoft\Microsoft SQL Server\Instance Names\SQL",
+                            @"SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\Instance Names\SQL"
+                        };
+
+                        foreach (var path in regPaths)
+                        {
+                            using (var key = Registry.LocalMachine.OpenSubKey(path))
+                            {
+                                if (key != null)
+                                {
+                                    foreach (var inst in key.GetValueNames())
+                                    {
+                                        if (inst.Equals("MSSQLSERVER", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            hasDefaultInstance = true;
+                                            string defaultInst = Environment.MachineName;
+                                            if (!list.Contains(defaultInst)) list.Add(defaultInst);
+                                        }
+                                        else
+                                        {
+                                            string namedInst = $@"{Environment.MachineName}\{inst}";
+                                            if (!list.Contains(namedInst)) list.Add(namedInst);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch { }
+
+                    // ۲. جستجو در شبکه از طریق SqlDataSourceEnumerator
                     try
                     {
                         Microsoft.Data.Sql.SqlDataSourceEnumerator instance = Microsoft.Data.Sql.SqlDataSourceEnumerator.Instance;
@@ -80,12 +117,29 @@ namespace Senik.DataTransformer.Views.Windows
                         {
                             string serverName = row["ServerName"]?.ToString() ?? "";
                             string instanceName = row["InstanceName"]?.ToString() ?? "";
-                            string fullServer = string.IsNullOrEmpty(instanceName) ? serverName : $@"{serverName}\{instanceName}";
 
-                            if (!list.Contains(fullServer)) list.Add(fullServer);
+                            if (!string.IsNullOrEmpty(instanceName))
+                            {
+                                string fullServer = $@"{serverName}\{instanceName}";
+                                if (!list.Contains(fullServer)) list.Add(fullServer);
+                            }
+                            else if (!string.IsNullOrEmpty(serverName))
+                            {
+                                // فقط اگر سرور راه دور باشد یا دیتابیس پیش‌فرض روی سیستم محلی نصب باشد
+                                if (!serverName.Equals(Environment.MachineName, StringComparison.OrdinalIgnoreCase) || hasDefaultInstance)
+                                {
+                                    if (!list.Contains(serverName)) list.Add(serverName);
+                                }
+                            }
                         }
                     }
                     catch { }
+
+                    // ۳. فیلتر کردن قطعی نام خام رایانه بدون نام نمونه در صورتی که دیتابیس پیش‌فرض فعال نباشد
+                    if (!hasDefaultInstance)
+                    {
+                        list.RemoveAll(s => s.Equals(Environment.MachineName, StringComparison.OrdinalIgnoreCase) || s.Equals("(local)", StringComparison.OrdinalIgnoreCase));
+                    }
 
                     return list;
                 });
@@ -98,25 +152,23 @@ namespace Senik.DataTransformer.Views.Windows
             }
             catch
             {
-                CmbServers.ItemsSource = new string[] { Environment.MachineName };
+                CmbServers.ItemsSource = new string[0];
                 CmbServers.IsEnabled = true;
-                CmbServers.SelectedIndex = 0;
                 MaterialDesignThemes.Wpf.HintAssist.SetHint(CmbServers, "انتخاب سرور SQL");
             }
             finally
             {
-                // 🔓 باز کردن قفل دکمه در پایان کار (حتی اگر اروری رخ داده باشد)
+                // 🔓 باز کردن قفل دکمه در پایان کار
                 if (BtnRefreshServers != null) BtnRefreshServers.IsEnabled = true;
             }
         }
 
         private async void RefreshServers_Click(object sender, RoutedEventArgs e)
         {
-            // دیگر نیازی به قفل کردن دستی اینجا نیست، خود متد بالایی این کار را می‌کند
             await DiscoverSqlServersAsync();
-
-            SenikDialog.Show("جستجوی سرورهای شبکه به پایان رسید.\nاگر سرور شما در لیست نیست، می‌توانید آدرس IP آن را به صورت دستی تایپ کنید.", "بروزرسانی", MessageBoxButton.OK, MessageBoxImage.Information);
+            SenikDialog.Show("جستجوی سرورهای شبکه به پایان رسید.\nاگر سرور شما در لیست نیست، می‌توانید آدرس آن را به صورت دستی تایپ کنید.", "بروزرسانی", MessageBoxButton.OK, MessageBoxImage.Information);
         }
+
         private void CmbAuthType_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (TxtUsername == null || TxtPassword == null) return;
@@ -137,7 +189,7 @@ namespace Senik.DataTransformer.Views.Windows
             }
         }
 
-        private void TestConnection_Click(object sender, RoutedEventArgs e)
+        private async void TestConnection_Click(object sender, RoutedEventArgs e)
         {
             string server = CmbServers.Text.Trim();
             bool isWinAuth = CmbAuthType.SelectedIndex == 0;
@@ -150,11 +202,22 @@ namespace Senik.DataTransformer.Views.Windows
                 return;
             }
 
+            // فیلتر و هشدار در صورت انتخاب نام دسکتاپ بدون نام اینستنس سرور
+            if (!server.Contains("\\") && server.Equals(Environment.MachineName, StringComparison.OrdinalIgnoreCase))
+            {
+                SenikDialog.Show("گزینه انتخاب شده فقط نام رایانه شماست و نام نمونه SQL (مانند SENIK2017) در آن مشخص نیست.\nلطفاً نمونه صحیح را از لیست انتخاب کرده یا به صورت ServerName\\InstanceName تایپ کنید.", "اخطار سرور", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var btn = sender as Button;
+            if (btn != null) btn.IsEnabled = false;
+            Mouse.OverrideCursor = Cursors.Wait;
+
             try
             {
                 var dbService = new DatabaseService();
                 string masterConn = dbService.BuildConnectionString(server, isWinAuth, user, pass, "master");
-                var databases = dbService.GetDatabases(masterConn);
+                var databases = await Task.Run(() => dbService.GetDatabases(masterConn));
 
                 CmbDatabases.ItemsSource = databases;
                 CmbDatabases.IsEnabled = true;
@@ -187,6 +250,11 @@ namespace Senik.DataTransformer.Views.Windows
             catch (Exception ex)
             {
                 SenikDialog.Show($"خطای سیستمی در برقراری ارتباط:\n{ex.Message}", "خطا", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                if (btn != null) btn.IsEnabled = true;
+                Mouse.OverrideCursor = null;
             }
         }
 

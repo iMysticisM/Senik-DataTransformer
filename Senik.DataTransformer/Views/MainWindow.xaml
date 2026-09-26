@@ -54,9 +54,9 @@
                             <Image Source="pack://application:,,,/Assets/Images/Logo.jpg" Width="40" Height="40" Margin="0,0,15,0" Stretch="Uniform"/>
                             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                                 <TextBlock x:Name="TitleText" Text="سیستم تبدیل اطلاعات سه نیک" Foreground="{DynamicResource MaterialDesignBody}" FontSize="20" FontWeight="Bold" FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn Bold"/>
-                                <TextBlock x:Name="StableText" Text="BETA 3" Foreground="Red" FontSize="13" TextAlignment="Center" Margin="265,-35,0,0" FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn Light"/>
+                                <TextBlock x:Name="StableText" Text="BETA 4" Foreground="Red" FontSize="13" TextAlignment="Center" Margin="265,-35,0,0" FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn Light"/>
 
-                                <TextBlock x:Name="VersionText" Text="نسخه ۱.۲.۰" Foreground="{DynamicResource MaterialDesignBody}" FontSize="13" TextAlignment="Center" Margin="252,-20,0,0" FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn Light"/>
+                                <TextBlock x:Name="VersionText" Text="نسخه ۱.۲.۱" Foreground="{DynamicResource MaterialDesignBody}" FontSize="13" TextAlignment="Center" Margin="252,-20,0,0" FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn Light"/>
                             </StackPanel>
                         </StackPanel>
 
