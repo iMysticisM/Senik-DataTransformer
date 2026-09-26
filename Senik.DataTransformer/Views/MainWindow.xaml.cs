@@ -113,8 +113,6 @@ namespace Senik.DataTransformer.Views
 
         private async Task RunStartupTasksSequentiallyAsync()
         {
-            await Senik.DataTransformer.Views.Windows.UpdateWindow.CheckForUpdateAsync();
-
             // گارد امنیتی بدون قفل کردن نخ اصلی اما با توکن لغو ارسال می‌شود
             _ = Senik.DataTransformer.Services.SenikSecurityGuard.StartGuardAsync(_cts.Token);
 

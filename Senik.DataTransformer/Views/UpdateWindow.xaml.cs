@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -50,12 +51,47 @@ namespace Senik.DataTransformer.Views.Windows
             }
         }
 
-        public static async Task CheckForUpdateAsync()
+        private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (_isMandatory && !_isDownloaded)
+            {
+                // مسدودسازی هرگونه دور زدن با کلیدهای میانبر نظیر Alt+F4، Escape و Ctrl+W
+                if ((Keyboard.Modifiers == ModifierKeys.Alt && (e.SystemKey == Key.F4 || e.Key == Key.F4)) ||
+                    e.Key == Key.Escape ||
+                    (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.W))
+                {
+                    e.Handled = true;
+                    Application.Current.Shutdown();
+                }
+            }
+        }
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            if (_isMandatory && !_isDownloaded)
+            {
+                // در صورت آپدیت اجباری اگر پنجره به هر نحوی بسته شود، کل نرم‌افزار بسته می‌شود
+                Application.Current.Shutdown();
+            }
+            base.OnClosing(e);
+        }
+
+        public static async Task CheckForUpdateAsync(Window? owner = null)
         {
             var updateInfo = await UpdateService.CheckForUpdatesAsync();
             if (updateInfo != null)
             {
                 var window = new UpdateWindow();
+                if (owner != null && owner.IsLoaded)
+                {
+                    window.Owner = owner;
+                    window.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                }
+                else
+                {
+                    window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                }
+
                 window.TxtNotes.Text = string.IsNullOrWhiteSpace(updateInfo.ReleaseNotes) 
                     ? "به‌روزرسانی شامل بهبود عملکرد و پایداری سیستم می‌باشد." 
                     : updateInfo.ReleaseNotes;
@@ -69,16 +105,6 @@ namespace Senik.DataTransformer.Views.Windows
                     window.BadgeOptional.Visibility = Visibility.Collapsed;
                     window.BtnCancel.Visibility = Visibility.Collapsed;
                     window.BtnCloseWindow.Visibility = Visibility.Collapsed;
-
-                    // اگر آپدیت اجباری بود، دکمه بستن (ضربدر) کار نخواهد کرد
-                    window.Closing += (s, e) =>
-                    {
-                        if (!window._isDownloaded)
-                        {
-                            MessageBox.Show("این یک به‌روزرسانی امنیتی و الزامی است. نمی‌توانید آن را لغو کنید.", "اخطار", MessageBoxButton.OK, MessageBoxImage.Warning);
-                            e.Cancel = true;
-                        }
-                    };
                 }
                 else
                 {
@@ -89,6 +115,12 @@ namespace Senik.DataTransformer.Views.Windows
                 }
 
                 window.ShowDialog();
+
+                // حفاظت مضاعف: اگر کاربر به هر روشی پنجره آپدیت اجباری را بست و دانلود انجام نشد، کل برنامه بسته خواهد شد
+                if (window._isMandatory && !window._isDownloaded)
+                {
+                    Application.Current.Shutdown();
+                }
             }
         }
 
@@ -96,7 +128,7 @@ namespace Senik.DataTransformer.Views.Windows
         {
             if (_isMandatory && !_isDownloaded)
             {
-                MessageBox.Show("این یک به‌روزرسانی امنیتی و الزامی است. لطفاً ابتدا به‌روزرسانی را تکمیل کنید.", "اخطار", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Application.Current.Shutdown();
                 return;
             }
             this.Close();
@@ -104,6 +136,11 @@ namespace Senik.DataTransformer.Views.Windows
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
+            if (_isMandatory && !_isDownloaded)
+            {
+                Application.Current.Shutdown();
+                return;
+            }
             this.Close();
         }
 

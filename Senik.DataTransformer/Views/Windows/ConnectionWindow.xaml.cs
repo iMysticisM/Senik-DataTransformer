@@ -1,4 +1,4 @@
-﻿using MaterialDesignThemes.Wpf;
+using MaterialDesignThemes.Wpf;
 using Microsoft.Win32;
 using Senik.DataTransformer.Core;
 using Senik.DataTransformer.Services;
@@ -47,7 +47,12 @@ namespace Senik.DataTransformer.Views.Windows
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            await Senik.DataTransformer.Views.Windows.UpdateWindow.CheckForUpdateAsync();
+            // پنجره آپدیت ۵ ثانیه پس از باز شدن پنجره پایگاه داده باز شود
+            await Task.Delay(5000);
+            if (this.IsLoaded && !this.IsConnected)
+            {
+                await Senik.DataTransformer.Views.Windows.UpdateWindow.CheckForUpdateAsync(this);
+            }
         }
 
         // 🟢 تغییر ۳: جستجوی فوق‌سریع سرورهای Local از طریق Registry ویندوز (بدون هنگ کردن شبکه)
