@@ -1,0 +1,59 @@
+<UserControl x:Class="Senik.DataTransformer.Views.Components.WarningConfirmDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             Width="430" Background="Transparent" FlowDirection="RightToLeft"
+             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
+
+    <Border CornerRadius="20" BorderThickness="1" BorderBrush="{DynamicResource MaterialDesignDivider}" ClipToBounds="True">
+        <Grid>
+            <!-- پس‌زمینه نیمه‌شفاف شیشه‌ای متناسب با تم -->
+            <Border Background="{DynamicResource MaterialDesignPaper}" Opacity="0.98" CornerRadius="20"/>
+
+            <StackPanel Margin="24">
+                <materialDesign:PackIcon Kind="AlertCircleOutline" Width="50" Height="50" 
+                                         Foreground="#F59E0B" HorizontalAlignment="Center" Margin="0,0,0,12"/>
+
+                <TextBlock x:Name="TxtTitle" Text="هشدار جایگزینی فایل" FontSize="18" FontWeight="Bold" 
+                           HorizontalAlignment="Center" Margin="0,0,0,8" 
+                           Foreground="{DynamicResource MaterialDesignBody}"/>
+
+                <TextBlock x:Name="TxtMessage" 
+                           Text="فایل دیگری در این تب باز است. آیا مطمئن هستید که میخواهید فایل جدیدی را جایگزین کنید؟" 
+                           Foreground="{DynamicResource MaterialDesignBodyLight}" FontSize="13.5" 
+                           TextWrapping="Wrap" TextAlignment="Center" LineHeight="22" Margin="0,0,0,24"/>
+
+                <!-- دکمه‌های تایید و انصراف -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="14"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Button Grid.Column="0" Content="انصراف" 
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}"
+                            Foreground="{DynamicResource MaterialDesignBodyLight}" 
+                            BorderBrush="{DynamicResource MaterialDesignDivider}" 
+                            materialDesign:ButtonAssist.CornerRadius="12" Height="42" FontSize="13.5" Cursor="Hand">
+                        <Button.CommandParameter>
+                            <sys:Boolean>false</sys:Boolean>
+                        </Button.CommandParameter>
+                    </Button>
+
+                    <Button Grid.Column="2" Content="بله، جایگزین شود" 
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}"
+                            Background="#EF4444" BorderThickness="0" Foreground="White" 
+                            materialDesign:ButtonAssist.CornerRadius="12" Height="42" FontSize="13.5" FontWeight="Bold" Cursor="Hand">
+                        <Button.CommandParameter>
+                            <sys:Boolean>true</sys:Boolean>
+                        </Button.CommandParameter>
+                    </Button>
+                </Grid>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

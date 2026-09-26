@@ -1,0 +1,248 @@
+<Window x:Class="Senik.DataTransformer.Views.Windows.AdvancedMappingWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:conv="clr-namespace:Senik.DataTransformer.Converters"
+        xmlns:core="clr-namespace:Senik.DataTransformer.Core"
+        Title="پیکربندی و نگاشت پیشرفته ستون‌ها" 
+        Height="700" Width="950"
+        WindowStartupLocation="CenterOwner"
+        FlowDirection="RightToLeft"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
+
+    <Window.Resources>
+        <conv:MandatoryToStringConverter x:Key="MandatoryToStringConverter"/>
+    </Window.Resources>
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="0" ResizeBorderThickness="6" CornerRadius="24" GlassFrameThickness="0"/>
+    </WindowChrome.WindowChrome>
+
+    <!-- بدنه اصلی با گلس مورفیزم و سایه استاندارد -->
+<materialDesign:DialogHost Identifier="RootDialog" DialogTheme="Inherit" Background="Transparent">
+        <Border x:Name="MainBackgroundBorder" ClipToBounds="True" Margin="15" CornerRadius="20" BorderThickness="1" BorderBrush="{DynamicResource MaterialDesignDivider}">
+
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop x:Name="BgGradient1" Color="#E0EAFC" Offset="0.0" />
+                    <GradientStop x:Name="BgGradient2" Color="#CFDEF3" Offset="1.0" />
+                </LinearGradientBrush>
+            </Border.Background>
+
+            <Border x:Name="GlassPanel" Margin="20" CornerRadius="24" BorderThickness="1">
+                <Border.BorderBrush>
+                    <SolidColorBrush x:Name="GlassBorderBrush" Color="#80FFFFFF" />
+                </Border.BorderBrush>
+                <Border.Background>
+                    <!-- شفافیت پایه، در کد C# بر اساس لایت/دارک تغییر میکند -->
+                    <SolidColorBrush x:Name="GlassBrush" Color="White" Opacity="0.85" /> 
+                </Border.Background>
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="30" ShadowDepth="5" Color="Black" Opacity="0.1" />
+                </Border.Effect>
+
+                <!-- محتوای اصلی پنجره (گرید) دقیقاً اینجا قرار می‌گیرد -->
+                <Grid Margin="20">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="60"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="65"/>
+                    </Grid.RowDefinitions>
+                    <!-- هدر پنجره -->
+                    <Grid Grid.Row="0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <materialDesign:PackIcon Kind="TableCog" Width="30" Height="30" Foreground="{DynamicResource MaterialDesignBody}" VerticalAlignment="Center" Margin="50,0,10,0"/>
+                            <TextBlock Text="نگاشت تخصصی ستون‌های اکسل به پایگاه داده سه نیک" FontSize="18" FontWeight="Bold" VerticalAlignment="Center" Foreground="{DynamicResource MaterialDesignBody}"/>
+                        </StackPanel>
+
+                        <Button HorizontalAlignment="Left" Style="{StaticResource MaterialDesignFlatButton}" Width="40" Height="40" Padding="0" Click="Close_Click" materialDesign:ButtonAssist.CornerRadius="20">
+                            <materialDesign:PackIcon Kind="Close" Width="24" Height="24" Foreground="#EF4444"/>
+                        </Button>
+                    </Grid>
+
+                    <!-- نوار راهنما (نارنجی گلس - زیبا در هر دو تم) -->
+                    <Border Grid.Row="1" Background="#1A0284C7" BorderBrush="#0284C7" BorderThickness="3,0,0,0" CornerRadius="10" Padding="15,12" Margin="0,0,0,15">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="InformationOutline" Foreground="#0284C7" Width="22" Height="22" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="ستون‌های دارای علامت (ستاره قرمز *) اجباری هستند و عدم تطبیق آن‌ها مانع از انتقال اطلاعات خواهد شد." Foreground="{DynamicResource MaterialDesignBody}" FontWeight="Medium" FontSize="13" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- گرید نگاشت فیلدها -->
+                    <Border Grid.Row="2" Background="Transparent" CornerRadius="14" BorderBrush="{DynamicResource MaterialDesignDivider}" BorderThickness="1" Padding="5">
+                        <DataGrid ItemsSource="{Binding Mappings}" AutoGenerateColumns="False" CanUserAddRows="False"
+                          ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                          core:HorizontalScrollBehavior.Enable="True"
+                          HeadersVisibility="Column" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{DynamicResource MaterialDesignDivider}"
+                          RowHeight="60" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource MaterialDesignBody}">
+                            <!-- 🟢 تغییر 10: شخصی سازی هاور (Hover) و جلوگیری از سفید شدن زننده -->
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#1A888888"/>
+                                            <!-- هاور شیشه‌ای و ملایم -->
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background" Value="#3310B981"/>
+                                            <!-- سبز ملایم در زمان کلیک -->
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGrid.RowStyle>
+
+                            <!-- جلوگیری از مشکی شدن متن در زمان انتخاب سلول -->
+                            <DataGrid.CellStyle>
+                                <Style TargetType="DataGridCell" BasedOn="{StaticResource MaterialDesignDataGridCell}">
+                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGrid.CellStyle>
+                            <!-- استایل دادن به هدر جدول برای تفکیک از محتوا -->
+                            <DataGrid.ColumnHeaderStyle>
+                                <Style TargetType="DataGridColumnHeader"  BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBodyLight}"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                    <Setter Property="FontSize" Value="13"/>
+                                    <Setter Property="Padding" Value="10,15,10,15"/>
+                                    <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesignDivider}"/>
+                                    <Setter Property="BorderThickness" Value="0,0,0,2"/>
+                                </Style>
+                            </DataGrid.ColumnHeaderStyle>
+
+                            <DataGrid.Columns>
+                                <!-- ستون وضعیت (برچسب‌های اجباری/اختیاری) -->
+                                <DataGridTemplateColumn Header="وضعیت" Width="100" SortMemberPath="IsMandatory">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="8" Padding="8,5" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="#1A64748B"/>
+                                                        <!-- خاکستری گلس -->
+                                                        <Setter Property="BorderBrush" Value="#3364748B"/>
+                                                        <Setter Property="BorderThickness" Value="1"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsMandatory}" Value="True">
+                                                                <Setter Property="Background" Value="#1AEF4444"/>
+                                                                <!-- قرمز گلس -->
+                                                                <Setter Property="BorderBrush" Value="#4DEF4444"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <TextBlock Text="{Binding IsMandatory, Converter={StaticResource MandatoryToStringConverter}}" FontSize="11.5" FontWeight="Bold">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBodyLight}"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsMandatory}" Value="True">
+                                                                    <Setter Property="Foreground" Value="#EF4444"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTextColumn Header="عنوان فیلد در سنیک" Binding="{Binding DisplayName}" FontWeight="Bold" Width="200" IsReadOnly="True">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                            <Setter Property="Margin" Value="10,0"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+
+                                <!-- ستون مقصد (رنگ آبی/فیروزه ای برای تمایز) -->
+                                <DataGridTemplateColumn Header="جدول / ستون مقصد" Width="200">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding TargetField}" FontFamily="Consolas" FontSize="13" Foreground="{DynamicResource PrimaryHueMidBrush}" FontWeight="SemiBold" VerticalAlignment="Center" FlowDirection="LeftToRight" Margin="10,0"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <!-- کمبوباکس با استایل تصحیح شده برای دارک مود -->
+                                <DataGridTemplateColumn Header="ستون معادل در فایل اکسل شما" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <ComboBox ItemsSource="{Binding DataContext.ExcelHeaders, RelativeSource={RelativeSource AncestorType=Window}}"
+                                              SelectedItem="{Binding SelectedExcelColumn, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                              materialDesign:HintAssist.Hint="-- انتخاب ستون معادل --" 
+                                              Foreground="{DynamicResource MaterialDesignBody}"
+                                              materialDesign:HintAssist.Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                              BorderThickness="0,0,0,1" BorderBrush="{DynamicResource PrimaryHueMidBrush}" 
+                                              Padding="10,8" Margin="15,0" VerticalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+
+                    <!-- دکمه‌های پایین (فوتر) -->
+                    <Grid Grid.Row="3" Margin="0,15,0,0">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                            <Button Content="🔄 بازنشانی نگاشت‌ها" Click="ResetMapping_Click" Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="{DynamicResource MaterialDesignBody}" BorderBrush="{DynamicResource MaterialDesignDivider}" materialDesign:ButtonAssist.CornerRadius="12" Margin="0,0,10,0" Height="44"/>
+                            <Button Command="{Binding ForceAutoMapCommand}" 
+        Margin="0,0,10,0" materialDesign:ButtonAssist.CornerRadius="8"
+        BorderThickness="0" Foreground="Black" Cursor="Hand" Height="40">
+                                <!-- پس‌زمینه گرادیانت -->
+                                <Button.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                        <GradientStop Color="#EE54FF9E" Offset="0"/>
+                                        <GradientStop Color="#EE54FFFF" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Button.Background>
+                                <!-- انیمیشن تنفس (Breathing) و چشمک‌زن AI -->
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                                        <Style.Triggers>
+                                            <EventTrigger RoutedEvent="Loaded">
+                                                <BeginStoryboard>
+                                                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                                        <ColorAnimation Storyboard.TargetProperty="(Button.Background).(LinearGradientBrush.GradientStops)[0].Color" From="#EE54FFFF" To="#EE54FFFF" Duration="0:0:3"/>
+                                                        <ColorAnimation Storyboard.TargetProperty="(Button.Background).(LinearGradientBrush.GradientStops)[1].Color" From="#EE54FFFF" To="#EE54FFFF" Duration="0:0:3"/>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)" From="0.3" To="0.8" Duration="0:0:1.5" AutoReverse="True"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </EventTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                <!-- سایه نورانی برای حالت دارک مود و لایت مود -->
+                                <Button.Effect>
+                                    <DropShadowEffect Color="#EE54FFFF" BlurRadius="20" ShadowDepth="0" Opacity="0.6"/>
+                                </Button.Effect>
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="AutoFix" Margin="0,0,5,0" VerticalAlignment="Center" Width="20" Height="20"/>
+                                    <TextBlock Text="نگاشت خودکار" FontWeight="Bold" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <Button Content="انصراف" Click="Close_Click" Style="{StaticResource MaterialDesignFlatButton}" Foreground="{DynamicResource MaterialDesignBodyLight}" materialDesign:ButtonAssist.CornerRadius="12" Margin="0,0,10,0" Width="100" Height="44" FontSize="14"/>
+                            <Button Content="💾 ذخیره و اعمال نگاشت" Click="SaveMapping_Click" Style="{StaticResource MaterialDesignRaisedButton}" Background="#10B981" Foreground="White" BorderThickness="0" materialDesign:ElevationAssist.Elevation="Dp0" materialDesign:ButtonAssist.CornerRadius="12" Padding="25,0" Height="44" FontSize="14" FontWeight="Bold"/>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Border>
+
+    </materialDesign:DialogHost>
+</Window>

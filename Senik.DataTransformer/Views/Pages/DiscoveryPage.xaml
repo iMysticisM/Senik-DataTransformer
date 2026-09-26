@@ -1,0 +1,82 @@
+﻿<Page x:Class="Senik.DataTransformer.Views.Pages.DiscoveryPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+      xmlns:views="clr-namespace:Senik.DataTransformer.Views.Tabs"
+      xmlns:vms="clr-namespace:Senik.DataTransformer.ViewModels"
+      FlowDirection="RightToLeft"
+      TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+      FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn"
+      PreviewKeyDown="Page_PreviewKeyDown" 
+      Focusable="True" 
+      Loaded="Page_Loaded">
+
+    <Page.Resources>
+        <!-- اتصال ویومدل کالا به رابط کاربری (KalaTabView) -->
+        <DataTemplate DataType="{x:Type vms:KalaViewModel}">
+            <views:KalaTabView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vms:PersonViewModel}">
+            <views:PersonTabView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vms:CheckViewModel}">
+            <views:CheckTabView />
+        </DataTemplate>
+
+        <!-- انیمیشن تب‌ها -->
+        <Style TargetType="RadioButton" BasedOn="{StaticResource MaterialDesignTabRadioButton}">
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <ScaleTransform ScaleX="1" ScaleY="1"/>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter Property="Foreground" Value="#F59E0B"/>
+                    <Trigger.EnterActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleX" To="1.05" Duration="0:0:0.15"/>
+                                <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleY" To="1.05" Duration="0:0:0.15"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.EnterActions>
+                    <Trigger.ExitActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleX" To="1.0" Duration="0:0:0.15"/>
+                                <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleY" To="1.0" Duration="0:0:0.15"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.ExitActions>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Page.Resources>
+
+    <Grid Margin="15,0,15,15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <!-- ✨ ردیف دکمه سراسری -->
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12" HorizontalAlignment="Left">
+            <RadioButton x:Name="TabKala" Content="📦 کالاها و انبار (Goods)" IsChecked="{Binding IsKalaTabSelected}" Margin="0,0,8,0" Padding="18,9" materialDesign:ButtonAssist.CornerRadius="18" FontSize="13.5" FontWeight="Bold"/>
+            <RadioButton x:Name="TabPerson" Content="👤 اشخاص و طرف‌حساب‌ها (Persons)" IsChecked="{Binding IsPersonTabSelected}" Margin="0,0,8,0" Padding="18,9" materialDesign:ButtonAssist.CornerRadius="18" FontSize="13.5"/>
+            <RadioButton x:Name="TabCheck" Content="💳 چک و اسناد مالی (Checks)" IsChecked="{Binding IsCheckTabSelected}" Margin="0,0,8,0" Padding="18,9" materialDesign:ButtonAssist.CornerRadius="18" FontSize="13.5"/>
+        </StackPanel>
+
+        <ContentControl Grid.Row="1" Content="{Binding CurrentViewModel}" />
+
+        <!-- ✨ دکمه پردازش جامع که تمام تب‌ها را چک می‌کند -->
+        <Button x:Name="BtnGlobalStart" Grid.Row="2" Content="🚀 اعتبارسنجی نهایی و شروع عملیات" 
+                Command="{Binding GlobalValidateAndProceedCommand}" 
+                Style="{StaticResource MaterialDesignRaisedButton}" 
+                Background="#10B981" Foreground="White" BorderThickness="0"
+                Height="50" FontSize="15" FontWeight="Bold" Margin="0,15,0,0" 
+                materialDesign:ButtonAssist.CornerRadius="12"/>
+    </Grid>
+</Page>

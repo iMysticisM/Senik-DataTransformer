@@ -1,0 +1,146 @@
+<Window x:Class="Senik.DataTransformer.Views.Windows.UpdateWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="به‌روزرسانی سیستم سه نیک" Height="480" Width="550"
+        WindowStartupLocation="CenterScreen" ShowInTaskbar="True"
+        FlowDirection="RightToLeft" WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown"
+        Opacity="0">
+
+    <Window.Triggers>
+        <EventTrigger RoutedEvent="Window.Loaded">
+            <BeginStoryboard>
+                <Storyboard>
+                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.3"/>
+                    <DoubleAnimation Storyboard.TargetName="GlassPanel" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" From="0.92" To="1" Duration="0:0:0.35">
+                        <DoubleAnimation.EasingFunction>
+                            <CubicEase EasingMode="EaseOut"/>
+                        </DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                    <DoubleAnimation Storyboard.TargetName="GlassPanel" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" From="0.92" To="1" Duration="0:0:0.35">
+                        <DoubleAnimation.EasingFunction>
+                            <CubicEase EasingMode="EaseOut"/>
+                        </DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </Window.Triggers>
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="0" ResizeBorderThickness="6" CornerRadius="24" GlassFrameThickness="0"/>
+    </WindowChrome.WindowChrome>
+
+    <materialDesign:DialogHost Identifier="UpdateDialog" DialogTheme="Inherit" Background="Transparent">
+        <Border x:Name="MainBackgroundBorder" CornerRadius="26" ClipToBounds="True" BorderThickness="1" BorderBrush="{DynamicResource MaterialDesignDivider}">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop x:Name="BgGradient1" Color="#E0EAFC" Offset="0.0" />
+                    <GradientStop x:Name="BgGradient2" Color="#CFDEF3" Offset="1.0" />
+                </LinearGradientBrush>
+            </Border.Background>
+
+            <Border x:Name="GlassPanel" Margin="18" CornerRadius="22" BorderThickness="1" RenderTransformOrigin="0.5,0.5">
+                <Border.RenderTransform>
+                    <ScaleTransform ScaleX="1" ScaleY="1"/>
+                </Border.RenderTransform>
+                <Border.BorderBrush>
+                    <SolidColorBrush x:Name="GlassBorderBrush" Color="#80FFFFFF" />
+                </Border.BorderBrush>
+                <Border.Background>
+                    <SolidColorBrush x:Name="GlassBrush" Color="White" Opacity="0.85" />
+                </Border.Background>
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="30" ShadowDepth="5" Color="Black" Opacity="0.15" />
+                </Border.Effect>
+
+                <Grid Margin="24">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- هدر پنجره با دکمه بستن و عنوان زیبا -->
+                    <Grid Grid.Row="0" Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Background="#1A10B981" CornerRadius="12" Width="44" Height="44" Margin="0,0,14,0">
+                                <materialDesign:PackIcon Kind="CloudDownloadOutline" Width="26" Height="26" Foreground="#10B981" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="به‌روزرسانی نرم‌افزار سه نیک" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource MaterialDesignBody}"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                    <Border x:Name="BadgeMandatory" CornerRadius="6" Padding="6,2" Background="#1AEF4444" Margin="0,0,8,0" Visibility="Collapsed">
+                                        <TextBlock Text="⚠️ به‌روزرسانی الزامی" FontSize="11" FontWeight="Bold" Foreground="#EF4444"/>
+                                    </Border>
+                                    <Border x:Name="BadgeOptional" CornerRadius="6" Padding="6,2" Background="#1A0284C7" Margin="0,0,8,0" Visibility="Visible">
+                                        <TextBlock Text="✨ نسخه جدید در دسترس" FontSize="11" FontWeight="Bold" Foreground="#0284C7"/>
+                                    </Border>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- دکمه بستن پنجره -->
+                        <Button x:Name="BtnCloseWindow" Grid.Column="1" Click="Close_Click" Style="{StaticResource MaterialDesignFlatButton}" Width="36" Height="36" Padding="0" materialDesign:ButtonAssist.CornerRadius="18" ToolTip="بستن">
+                            <materialDesign:PackIcon Kind="Close" Width="20" Height="20" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                        </Button>
+                    </Grid>
+
+                    <!-- بخش توضیحات و لیست تغییرات -->
+                    <Grid Grid.Row="1" Margin="0,0,0,16">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+                            <materialDesign:PackIcon Kind="FormatListBulleted" Width="18" Height="18" Foreground="{DynamicResource PrimaryHueMidBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="تغییرات و قابلیت‌های نسخه جدید:" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource MaterialDesignBody}"/>
+                        </StackPanel>
+
+                        <Border Grid.Row="1" Background="{DynamicResource MaterialDesignTextFieldBoxBackground}" 
+                                BorderBrush="{DynamicResource MaterialDesignDivider}" BorderThickness="1" 
+                                CornerRadius="14" Padding="14" ClipToBounds="True">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <TextBlock x:Name="TxtNotes" Foreground="{DynamicResource MaterialDesignBody}" 
+                                           TextWrapping="Wrap" FontSize="13" LineHeight="24"/>
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+
+                    <!-- نوار وضعیت و درصد دانلود -->
+                    <StackPanel x:Name="PanelProgress" Grid.Row="2" Margin="0,0,0,16" Visibility="Collapsed">
+                        <Grid Margin="0,0,0,6">
+                            <TextBlock x:Name="TxtProgressStatus" Text="در حال دریافت فایل به‌روزرسانی..." FontSize="12.5" Foreground="{DynamicResource MaterialDesignBodyLight}" HorizontalAlignment="Right"/>
+                            <TextBlock x:Name="TxtProgressPercent" Text="0%" FontWeight="Bold" FontSize="12.5" Foreground="{DynamicResource PrimaryHueMidBrush}" HorizontalAlignment="Left"/>
+                        </Grid>
+                        <ProgressBar x:Name="PbDownload" Height="8" Minimum="0" Maximum="100" 
+                                     Foreground="#10B981" Background="{DynamicResource MaterialDesignDivider}"
+                                     BorderThickness="0"/>
+                    </StackPanel>
+
+                    <!-- دکمه‌های پاورقی -->
+                    <Grid Grid.Row="3">
+                        <Button x:Name="BtnCancel" HorizontalAlignment="Left" Content="بعداً یادآوری کن" Click="Cancel_Click" 
+                                Style="{StaticResource MaterialDesignFlatButton}" Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                materialDesign:ButtonAssist.CornerRadius="12" Height="44" Padding="18,0" FontSize="13.5"/>
+
+                        <Button x:Name="BtnAction" HorizontalAlignment="Right" Content="🚀 دریافت و به‌روزرسانی" Click="BtnAction_Click" 
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Background="#10B981" BorderBrush="#10B981" Foreground="White"
+                                materialDesign:ButtonAssist.CornerRadius="12" materialDesign:ElevationAssist.Elevation="Dp1"
+                                Height="44" Padding="24,0" FontSize="14" FontWeight="Bold"/>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Border>
+    </materialDesign:DialogHost>
+</Window>

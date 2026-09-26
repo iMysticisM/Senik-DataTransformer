@@ -1,0 +1,157 @@
+<UserControl x:Class="Senik.DataTransformer.Views.Tabs.KalaTabView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:core="clr-namespace:Senik.DataTransformer.Core"
+             FlowDirection="RightToLeft"
+             TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
+
+    <UserControl.Resources>
+        <!-- استایل دکمه بازنشانی با جلوگیری از سفید شدن در هاور ماوس -->
+        <Style x:Key="ResetDangerButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+            <Setter Property="Background" Value="#EF4444"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="12"/>
+            <Setter Property="materialDesign:RippleAssist.Feedback" Value="#33FFFFFF"/>
+            <Setter Property="materialDesign:ElevationAssist.Elevation" Value="Dp0"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#DC2626"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#B91C1C"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="KeyboardFocusButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
+            <Style.Triggers>
+                <Trigger Property="IsKeyboardFocused" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource MaterialDesignDivider}"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource PrimaryHueMidBrush}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="GlassGreenButton" TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+            <Setter Property="Foreground" Value="#059669"/>
+            <Setter Property="BorderBrush" Value="#10B981"/>
+            <Setter Property="Background" Value="#0D10B981"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid KeyboardNavigation.TabNavigation="Cycle">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- نوار ابزار بالا (منعطف) -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*" MinWidth="150"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <!-- جای دکمه دانلود -->
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="150"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0" Text="📎 فایل:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,0,10,0" FontSize="13"/>
+
+            <Border Grid.Column="1" Background="#1A808080" BorderBrush="{DynamicResource MaterialDesignDivider}" BorderThickness="1" CornerRadius="10" Padding="12,0" Height="40" Margin="0,0,10,0">
+                <TextBlock Text="{Binding SelectedFilePath}" VerticalAlignment="Center" FlowDirection="LeftToRight" FontFamily="Consolas" TextTrimming="CharacterEllipsis"/>
+            </Border>
+
+            <Button x:Name="SelectFile" Grid.Column="2" Content="📂 انتخاب" Command="{Binding SelectFileCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Height="40" materialDesign:ButtonAssist.CornerRadius="10" Margin="0,0,5,0"/>
+
+            <!-- ✨ دکمه جدید دانلود نمونه -->
+            <Button x:Name="SampleDownload" Grid.Column="3" Content="📥 دانلود نمونه" Command="{Binding DownloadTemplateCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="#7ECC00" Background="Transparent" materialDesign:ButtonAssist.CornerRadius="10" BorderBrush="#A6FF0F" Height="40" Margin="0,0,20,0"/>
+
+            <TextBlock Grid.Column="4" Text="📑 شیت:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,0,10,0" FontSize="13"/>
+
+            <ComboBox Grid.Column="5" ItemsSource="{Binding AvailableSheets}" SelectedItem="{Binding SelectedSheet}" Margin="0,0,15,0"
+              materialDesign:HintAssist.Hint="انتخاب شیت" BorderThickness="0,0,0,1" VerticalAlignment="Center" BorderBrush="#10B981" />
+
+            <Button x:Name="BtnMapping" Grid.Column="6" Content="⚙️ تنظیمات نگاشت" Command="{Binding OpenMappingCommand}" Height="40" Style="{StaticResource GlassGreenButton}" materialDesign:ButtonAssist.CornerRadius="10" FontWeight="Bold"/>
+        </Grid>
+
+        <!-- پیش‌نمایش داده‌ها -->
+        <Border Grid.Row="1" Background="Transparent" CornerRadius="16" Margin="0,0,0,12" ClipToBounds="True" KeyboardNavigation.IsTabStop="False">
+            <DataGrid ItemsSource="{Binding PreviewDataTable}" AutoGenerateColumns="True" IsReadOnly="True" 
+                      ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                      EnableRowVirtualization="True" EnableColumnVirtualization="False"
+                      core:HorizontalScrollBehavior.Enable="True"
+                      VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
+                      HeadersVisibility="Column" BorderThickness="0" Background="Transparent" Margin="10"
+                      RowBackground="Transparent" AlternatingRowBackground="#0A000000"
+                      HorizontalGridLinesBrush="#1A000000" VerticalGridLinesBrush="Transparent">
+
+                <DataGrid.RowStyle>
+                    <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#1A888888"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="#3310B981"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.RowStyle>
+                <DataGrid.CellStyle>
+                    <Style TargetType="DataGridCell" BasedOn="{StaticResource MaterialDesignDataGridCell}">
+                        <Setter Property="BorderThickness" Value="0"/>
+                    </Style>
+                </DataGrid.CellStyle>
+            </DataGrid>
+        </Border>
+
+        <!-- نوار پایین -->
+        <Grid Grid.Row="2" KeyboardNavigation.IsTabStop="False">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" CornerRadius="12" Padding="12,0" Margin="0,0,12,0" Height="44"
+                    Background="{Binding StatusBadgeBackground}" BorderBrush="{Binding StatusBadgeBorder}" BorderThickness="1" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Ellipse Width="10" Height="10" Fill="{Binding StatusBadgeForeground}" Margin="0,0,8,0">
+                        <Ellipse.Triggers>
+                            <EventTrigger RoutedEvent="Loaded">
+                                <BeginStoryboard>
+                                    <Storyboard RepeatBehavior="Forever">
+                                        <DoubleAnimation Storyboard.TargetProperty="Opacity" From="1" To="0.2" Duration="0:0:1" AutoReverse="True"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </Ellipse.Triggers>
+                    </Ellipse>
+                    <TextBlock Text="{Binding StatusBadgeText}" Foreground="{Binding StatusBadgeForeground}" FontWeight="Bold" FontSize="13" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="1" Background="{DynamicResource MaterialDesignTextFieldBoxBackground}" CornerRadius="12" Margin="0,0,12,0" Height="44">
+                <TextBlock Text="{Binding QuickLogText}" FontFamily="Consolas" FontSize="12.5" TextAlignment="Left" Foreground="{DynamicResource MaterialDesignBodyLight}" FlowDirection="RightToLeft" VerticalAlignment="Center" Padding="15,0" TextTrimming="CharacterEllipsis"/>
+            </Border>
+
+            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <!-- ✨ دکمه بازنشانی با استایل تصحیح‌شده هاور -->
+                <Button Content="🔄 بازنشانی کل فرم" Command="{Binding ResetFormCommand}" Style="{StaticResource ResetDangerButtonStyle}" Margin="0,0,10,0" Height="44"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>
