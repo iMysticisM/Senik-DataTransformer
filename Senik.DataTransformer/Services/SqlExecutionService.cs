@@ -18,7 +18,7 @@ namespace Senik.DataTransformer.Services
         // ====================================================================
         // 📦 موتور پردازش کالا و انبار
         // ====================================================================
-        public void ExecuteKalaImport(NavigateToExecutionPageMessage executionData, string connectionString, string reportFolder, Action stepProgress, Action<string> updateMessage, Action<string> addLog, CancellationToken cancellationToken)
+        public (int SuccessCount, int FailCount) ExecuteKalaImport(NavigateToExecutionPageMessage executionData, string connectionString, string reportFolder, Action stepProgress, Action<string> updateMessage, Action<string> addLog, CancellationToken cancellationToken)
         {
             var activeMappings = executionData.KalaMappings.Where(m => !string.IsNullOrWhiteSpace(m.SelectedExcelColumn)).ToList();
             int successCount = 0;
@@ -29,7 +29,7 @@ namespace Senik.DataTransformer.Services
             {
                 bool sheetFound = false;
                 do { if (reader.Name == executionData.KalaSheetName) { sheetFound = true; break; } } while (reader.NextResult());
-                if (!sheetFound) return;
+                if (!sheetFound) return (0, 0);
 
                 var headerIndices = new Dictionary<string, int>();
                 if (reader.Read())
@@ -65,6 +65,13 @@ namespace Senik.DataTransformer.Services
 
                         rowData.TryGetValue("کد کالا", out string? currentIdKala);
 
+                        int? unit1Id = null, unit2Id = null;
+                        if (rowData.TryGetValue("واحد اصلی کالا", out string? unit1Name) && !string.IsNullOrWhiteSpace(unit1Name))
+                            unit1Id = GetOrAddUnit(sqlConnection, unitCache, unit1Name, addLog);
+
+                        if (rowData.TryGetValue("واحد فرعی کالا", out string? unit2Name) && !string.IsNullOrWhiteSpace(unit2Name))
+                            unit2Id = GetOrAddUnit(sqlConnection, unitCache, unit2Name, addLog);
+
                         using (var transaction = sqlConnection.BeginTransaction())
                         {
                             try
@@ -76,13 +83,6 @@ namespace Senik.DataTransformer.Services
                                     throw new Exception("مقدار «کد انبار» در این ردیف یافت نشد یا خالی است.");
 
                                 string? groupCode = ProcessGroupKala(sqlConnection, transaction, rowData);
-
-                                int? unit1Id = null, unit2Id = null;
-                                if (rowData.TryGetValue("واحد اصلی کالا", out string? unit1Name) && !string.IsNullOrWhiteSpace(unit1Name))
-                                    unit1Id = unitCache.TryGetValue(unit1Name, out int u1) ? u1 : throw new Exception($"واحد اصلی «{unit1Name}» در دیتابیس وجود ندارد.");
-
-                                if (rowData.TryGetValue("واحد فرعی کالا", out string? unit2Name) && !string.IsNullOrWhiteSpace(unit2Name))
-                                    unit2Id = unitCache.TryGetValue(unit2Name, out int u2) ? u2 : throw new Exception($"واحد فرعی «{unit2Name}» در دیتابیس وجود ندارد.");
 
                                 ProcessTblAnbar(sqlConnection, transaction, idAnbar, rowData);
                                 InsertTblKala(sqlConnection, transaction, rowData, currentIdKala, idAnbar, unit1Id, unit2Id, groupCode);
@@ -115,12 +115,14 @@ namespace Senik.DataTransformer.Services
 
             if (sqlErrorRows.Count > 0)
                 GenerateSqlErrorExcel(executionData.KalaFilePath, executionData.KalaSheetName, sqlErrorRows, reportFolder, "Kala_SQL_Errors.xlsx", addLog);
+
+            return (successCount, sqlErrorRows.Count);
         }
 
         // ====================================================================
         // 👤 موتور پردازش اشخاص و مالی
         // ====================================================================
-        public void ExecutePersonImport(NavigateToExecutionPageMessage executionData, string connectionString, string reportFolder, Action stepProgress, Action<string> updateMessage, Action<string> addLog, CancellationToken cancellationToken)
+        public (int SuccessCount, int FailCount) ExecutePersonImport(NavigateToExecutionPageMessage executionData, string connectionString, string reportFolder, Action stepProgress, Action<string> updateMessage, Action<string> addLog, CancellationToken cancellationToken)
         {
             var activeMappings = executionData.PersonMappings.Where(m => !string.IsNullOrWhiteSpace(m.SelectedExcelColumn)).ToList();
             int successCount = 0;
@@ -131,7 +133,7 @@ namespace Senik.DataTransformer.Services
             {
                 bool sheetFound = false;
                 do { if (reader.Name == executionData.PersonSheetName) { sheetFound = true; break; } } while (reader.NextResult());
-                if (!sheetFound) return;
+                if (!sheetFound) return (0, 0);
 
                 var headerIndices = new Dictionary<string, int>();
                 if (reader.Read())
@@ -205,12 +207,14 @@ namespace Senik.DataTransformer.Services
 
             if (sqlErrorRows.Count > 0)
                 GenerateSqlErrorExcel(executionData.PersonFilePath, executionData.PersonSheetName, sqlErrorRows, reportFolder, "Person_SQL_Errors.xlsx", addLog);
+
+            return (successCount, sqlErrorRows.Count);
         }
 
         // ====================================================================
         // 💳 موتور پردازش چک و اسناد مالی
         // ====================================================================
-        public void ExecuteCheckImport(NavigateToExecutionPageMessage executionData, string connectionString, string reportFolder, Action stepProgress, Action<string> updateMessage, Action<string> addLog, CancellationToken cancellationToken)
+        public (int SuccessCount, int FailCount) ExecuteCheckImport(NavigateToExecutionPageMessage executionData, string connectionString, string reportFolder, Action stepProgress, Action<string> updateMessage, Action<string> addLog, CancellationToken cancellationToken)
         {
             var activeMappings = executionData.CheckMappings.Where(m => !string.IsNullOrWhiteSpace(m.SelectedExcelColumn)).ToList();
             int successCount = 0;
@@ -221,7 +225,7 @@ namespace Senik.DataTransformer.Services
             {
                 bool sheetFound = false;
                 do { if (reader.Name == executionData.CheckSheetName) { sheetFound = true; break; } } while (reader.NextResult());
-                if (!sheetFound) return;
+                if (!sheetFound) return (0, 0);
 
                 var headerIndices = new Dictionary<string, int>();
                 if (reader.Read())
@@ -292,6 +296,8 @@ namespace Senik.DataTransformer.Services
 
             if (sqlErrorRows.Count > 0)
                 GenerateSqlErrorExcel(executionData.CheckFilePath, executionData.CheckSheetName, sqlErrorRows, reportFolder, "Check_SQL_Errors.xlsx", addLog);
+
+            return (successCount, sqlErrorRows.Count);
         }
 
         // ====================================================================
@@ -336,10 +342,128 @@ namespace Senik.DataTransformer.Services
             {
                 while (reader.Read())
                 {
-                    units[reader.GetString(1).Replace("ي", "ی").Replace("ك", "ک").Trim()] = Convert.ToInt32(reader.GetValue(0));
+                    int id = Convert.ToInt32(reader.GetValue(0));
+                    string rawName = reader.GetString(1).Trim();
+                    string persianNorm = rawName.Replace("ي", "ی").Replace("ك", "ک").Trim();
+                    string compact = persianNorm.Replace("\u200c", "").Replace(" ", "");
+
+                    units[rawName] = id;
+                    units[persianNorm] = id;
+                    units[compact] = id;
+
+                    // نگاشت مترادف‌های متداول به شناسه دیتابیس
+                    if (persianNorm == "کیلو" || compact == "کیلو")
+                    {
+                        units["کیلوگرم"] = id;
+                        units["کيلوگرم"] = id;
+                        units["کیلو گرم"] = id;
+                        units["کيلو گرم"] = id;
+                        units["کیلو‌گرم"] = id;
+                    }
+                    if (persianNorm == "مترمربع" || compact == "مترمربع")
+                    {
+                        units["متر مربع"] = id;
+                        units["متر‌مربع"] = id;
+                    }
+                    if (persianNorm == "کارتن" || compact == "کارتن")
+                    {
+                        units["کارتون"] = id;
+                        units["كارتون"] = id;
+                    }
+                    if (persianNorm == "عدد" || compact == "عدد")
+                    {
+                        units["تعداد"] = id;
+                    }
+                    if (persianNorm == "بسته" || compact == "بسته")
+                    {
+                        units["باکس"] = id;
+                        units["بكس"] = id;
+                    }
                 }
             }
             return units;
+        }
+
+        private string ResolveUnitAlias(string rawName)
+        {
+            if (string.IsNullOrWhiteSpace(rawName)) return string.Empty;
+
+            string cleaned = rawName.Replace("ي", "ی").Replace("ك", "ک").Trim();
+            string compact = cleaned.Replace("\u200c", "").Replace(" ", "");
+
+            if (compact == "کیلوگرم" || compact == "کیلو" || compact == "کيلوگرم" || compact == "کيلو")
+                return "کیلو";
+            if (compact == "مترمربع")
+                return "مترمربع";
+            if (compact == "کارتون" || compact == "کارتن" || compact == "كارتن" || compact == "كارتون")
+                return "کارتن";
+            if (compact == "تعداد" || compact == "عدد")
+                return "عدد";
+            if (compact == "لیتر" || compact == "ليتر")
+                return "لیتر";
+            if (compact == "بشکه" || compact == "بشكه")
+                return "بشکه";
+            if (compact == "قوطی" || compact == "قوطي")
+                return "قوطی";
+            if (compact == "گرم")
+                return "گرم";
+
+            return cleaned;
+        }
+
+        private int GetOrAddUnit(SqlConnection conn, Dictionary<string, int> unitCache, string rawUnitName, Action<string> addLog)
+        {
+            if (string.IsNullOrWhiteSpace(rawUnitName)) return 0;
+
+            string alias = ResolveUnitAlias(rawUnitName);
+
+            // 1. بررسی در کش با مترادف
+            if (unitCache.TryGetValue(alias, out int cachedId))
+                return cachedId;
+
+            // 2. بررسی با نام ورودی خام
+            if (unitCache.TryGetValue(rawUnitName, out int rawId))
+                return rawId;
+
+            // 3. بررسی با حالت نرمالایز و فشرده
+            string norm = rawUnitName.Replace("ي", "ی").Replace("ك", "ک").Trim();
+            if (unitCache.TryGetValue(norm, out int normId))
+                return normId;
+
+            string compact = norm.Replace("\u200c", "").Replace(" ", "");
+            if (unitCache.TryGetValue(compact, out int compactId))
+                return compactId;
+
+            // 4. استعلام از دیتابیس یا درج داینامیک در جدول TblUnit
+            string unitNameToStore = norm.Length > 50 ? norm.Substring(0, 50) : norm;
+            string query = @"
+                IF EXISTS (SELECT 1 FROM TblUnit WHERE Name = @Name)
+                BEGIN
+                    SELECT ID FROM TblUnit WHERE Name = @Name;
+                END
+                ELSE
+                BEGIN
+                    DECLARE @NewId INT = ISNULL((SELECT MAX(ID) FROM TblUnit), 0) + 1;
+                    INSERT INTO TblUnit (ID, Name, Intiger, SiteSync, NameEn, MoadiCode)
+                    VALUES (@NewId, @Name, 0, 0, '', 0);
+                    SELECT @NewId;
+                END";
+
+            using (var cmd = new SqlCommand(query, conn))
+            {
+                cmd.Parameters.AddWithValue("@Name", unitNameToStore);
+                object? result = cmd.ExecuteScalar();
+                int unitId = Convert.ToInt32(result);
+
+                unitCache[alias] = unitId;
+                unitCache[rawUnitName] = unitId;
+                unitCache[norm] = unitId;
+                unitCache[compact] = unitId;
+                unitCache[unitNameToStore] = unitId;
+
+                addLog($"✨ [واحد کالا] واحد جدید «{unitNameToStore}» در سیستم و دیتابیس ثبت شد (شناسه: {unitId}).");
+                return unitId;
+            }
         }
 
         private Dictionary<string, byte> LoadCheckStatesIntoMemory(SqlConnection conn)
@@ -453,19 +577,19 @@ namespace Senik.DataTransformer.Services
 
         private void ProcessTblAnbar(SqlConnection conn, SqlTransaction trans, string idAnbar, Dictionary<string, string> rowData)
         {
-            if (rowData.TryGetValue("نام انبار", out string? nameAnbar) && !string.IsNullOrWhiteSpace(nameAnbar))
+            rowData.TryGetValue("نام انبار", out string? nameAnbar);
+            string anbarName = string.IsNullOrWhiteSpace(nameAnbar) ? $"انبار {idAnbar.Trim()}" : nameAnbar.Trim();
+
+            string query = @"
+                IF NOT EXISTS (SELECT 1 FROM TblAnbar WHERE ID = @ID)
+                BEGIN
+                    INSERT INTO TblAnbar (ID, Name) VALUES (@ID, @Name)
+                END";
+            using (var cmd = new SqlCommand(query, conn, trans))
             {
-                string query = @"
-                    IF NOT EXISTS (SELECT 1 FROM TblAnbar WHERE ID = @ID)
-                    BEGIN
-                        INSERT INTO TblAnbar (ID, Name) VALUES (@ID, @Name)
-                    END";
-                using (var cmd = new SqlCommand(query, conn, trans))
-                {
-                    cmd.Parameters.AddWithValue("@ID", idAnbar.Trim());
-                    cmd.Parameters.AddWithValue("@Name", nameAnbar.Trim());
-                    cmd.ExecuteNonQuery();
-                }
+                cmd.Parameters.AddWithValue("@ID", idAnbar.Trim());
+                cmd.Parameters.AddWithValue("@Name", anbarName);
+                cmd.ExecuteNonQuery();
             }
         }
 
@@ -495,7 +619,7 @@ namespace Senik.DataTransformer.Services
                 cmd.Parameters.AddWithValue("@IDKala", idKala);
                 cmd.Parameters.AddWithValue("@IDAnbar", idAnbar);
                 cmd.Parameters.AddWithValue("@Name", string.IsNullOrWhiteSpace(name) ? (object)DBNull.Value : name.Trim());
-                cmd.Parameters.AddWithValue("@Unit1", unit1Id ?? (object)DBNull.Value);
+                cmd.Parameters.AddWithValue("@Unit1", unit1Id.HasValue && unit1Id.Value > 0 ? unit1Id.Value : 0);
                 cmd.Parameters.AddWithValue("@Unit2", unit2Id.HasValue && unit2Id.Value > 0 ? unit2Id.Value : 0);
                 cmd.Parameters.AddWithValue("@U1toU2", u1u2);
                 cmd.Parameters.AddWithValue("@GroupCode", string.IsNullOrWhiteSpace(groupCode) ? "0" : groupCode.Trim());
@@ -555,8 +679,9 @@ namespace Senik.DataTransformer.Services
             decimal tedad = ParseStrictDecimal(rowData.GetValueOrDefault("موجودی انبار"), "موجودی انبار");
             decimal fi = ParseStrictDecimal(rowData.GetValueOrDefault("قیمت آخرین خرید"), "قیمت آخرین خرید");
 
-            if (tedad > 0 || fi > 0)
+            if (tedad > 0)
             {
+                if (fi < 0) fi = 0;
                 using (var cmd = new SqlCommand("INSERT INTO TblTRAnbar (ShFactor, Type, IDAnbar, IDKala, Tedad, Fi, Mablaghekol) VALUES (@ShFactor, @Type, @IDAnbar, @IDKala, @Tedad, @Fi, @Mablaghekol)", conn, trans))
                 {
                     cmd.Parameters.AddWithValue("@ShFactor", 1);

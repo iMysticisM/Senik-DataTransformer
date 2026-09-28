@@ -35,7 +35,8 @@ namespace Senik.DataTransformer.Services
                 {
                     for (int i = 0; i < reader.FieldCount; i++)
                     {
-                        string colName = reader.GetValue(i)?.ToString()?.Trim() ?? $"Column{i}";
+                        string rawCol = reader.GetValue(i)?.ToString()?.Trim() ?? $"Column{i}";
+                        string colName = rawCol.Replace("ي", "ی").Replace("ك", "ک");
                         if (!headerIndices.ContainsKey(colName)) headerIndices.Add(colName, i);
                     }
                 }
@@ -50,7 +51,8 @@ namespace Senik.DataTransformer.Services
 
                     foreach (var map in activeMappings)
                     {
-                        if (map.SelectedExcelColumn == null || !headerIndices.TryGetValue(map.SelectedExcelColumn, out int colIndex)) continue;
+                        string selectedColClean = map.SelectedExcelColumn?.Trim().Replace("ي", "ی").Replace("ك", "ک") ?? "";
+                        if (string.IsNullOrEmpty(selectedColClean) || !headerIndices.TryGetValue(selectedColClean, out int colIndex)) continue;
 
                         string cellValue = reader.GetValue(colIndex)?.ToString()?.Trim() ?? string.Empty;
                         string target = map.DisplayName.Trim();
