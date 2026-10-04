@@ -65,12 +65,36 @@ namespace Senik.DataTransformer.ViewModels
             OpenFileDialog openFileDialog = new OpenFileDialog { Filter = "Excel Files|*.xls;*.xlsx;*.csv", Title = "انتخاب فایل کالا و انبار" };
             if (openFileDialog.ShowDialog() == true)
             {
-                ActualFilePath = openFileDialog.FileName;
-                SelectedFilePath = openFileDialog.FileName;
-                IsMappingConfirmed = false;
+                string chosenFile = openFileDialog.FileName;
+
+                // ۱. بررسی باز بودن فایل در برنامه دیگر
+                if (ExcelReaderService.IsFileLocked(chosenFile))
+                {
+                    SenikDialog.Show("فایل اکسل در برنامه دیگری باز هست. لطفا آن را ببندید و دوباره امتحان کنید.", "فایل در حال استفاده", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
                 try
                 {
-                    var sheetNames = _excelService.GetSheetNames(ActualFilePath);
+                    var sheetNames = _excelService.GetSheetNames(chosenFile);
+                    if (sheetNames == null || sheetNames.Count == 0)
+                    {
+                        SenikDialog.Show("فایل اکسل انتخابی فاقد شیت معتبر است.", "خطا", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+
+                    // ۲. اعتبارسنجی تطابق ستون‌های اجباری با تب کالا
+                    var initialHeaders = _excelService.GetSheetHeaders(chosenFile, sheetNames[0]);
+                    if (!ExcelReaderService.ValidateTabHeaders(initialHeaders, "Kala"))
+                    {
+                        SenikDialog.Show("اکسل انتخاب شده با تب مورد نظر تطابق ندارد لطفاً با دقت بیشتر فایل را انتخاب کنید.", "عدم تطابق فایل", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    ActualFilePath = chosenFile;
+                    SelectedFilePath = chosenFile;
+                    IsMappingConfirmed = false;
+
                     AvailableSheets.Clear();
                     foreach (var sheet in sheetNames) AvailableSheets.Add(sheet);
                     if (AvailableSheets.Count > 0) SelectedSheet = AvailableSheets[0];
@@ -84,7 +108,7 @@ namespace Senik.DataTransformer.ViewModels
                 catch (Exception ex)
                 {
                     string errorMessage = ex.Message;
-                    if (errorMessage.Contains("being used by another process")) errorMessage = "این فایل توسط برنامه دیگری (احتمالاً اکسل) باز است.\nلطفاً ابتدا فایل را ببندید.";
+                    if (errorMessage.Contains("being used by another process")) errorMessage = "فایل اکسل در برنامه دیگری باز هست. لطفا آن را ببندید و دوباره امتحان کنید.";
                     SenikDialog.Show($"خطا در خواندن فایل:\n{errorMessage}", "خطا", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }

@@ -1,4 +1,4 @@
-﻿namespace Senik.DataTransformer.Core
+namespace Senik.DataTransformer.Core
 {
     public static class AppState
     {
@@ -6,5 +6,8 @@
 
         // ✨ اضافه شدن قفل اجرای عملیات
         public static bool IsExecuting { get; set; } = false;
+
+        // ✨ نگهداری آخرین تب فعال جهت بازگشت هوشمند به همان تب در عملیات جدید
+        public static string LastActiveTab { get; set; } = "Kala";
     }
 }

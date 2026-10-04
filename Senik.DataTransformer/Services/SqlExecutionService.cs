@@ -176,7 +176,7 @@ namespace Senik.DataTransformer.Services
 
                                 InsertTblPerson(sqlConnection, transaction, rowData, currentId);
 
-                                if (rowData.TryGetValue("تلفن", out string? tell) && !string.IsNullOrWhiteSpace(tell))
+                                if (rowData.TryGetValue("تلفن", out string? tell) && !string.IsNullOrWhiteSpace(tell) && tell.Trim() != "0")
                                     InsertTblPersonTell(sqlConnection, transaction, currentId, tell);
 
                                 InsertMaster(sqlConnection, transaction, rowData, currentId);
@@ -742,17 +742,17 @@ namespace Senik.DataTransformer.Services
             {
                 cmd.Parameters.AddWithValue("@sh_ozviat", shOzviat.Trim());
                 cmd.Parameters.AddWithValue("@name", string.IsNullOrWhiteSpace(name) ? "" : name.Trim());
-                cmd.Parameters.AddWithValue("@Famil", string.IsNullOrWhiteSpace(famil) || famil == "0" ? "0" : famil.Trim());
-                cmd.Parameters.AddWithValue("@FatherName", string.IsNullOrWhiteSpace(fatherName) || fatherName == "0" ? "0" : fatherName.Trim());
+                cmd.Parameters.AddWithValue("@Famil", string.IsNullOrWhiteSpace(famil) || famil.Trim() == "0" ? (object)DBNull.Value : famil.Trim());
+                cmd.Parameters.AddWithValue("@FatherName", string.IsNullOrWhiteSpace(fatherName) || fatherName.Trim() == "0" ? (object)DBNull.Value : fatherName.Trim());
 
                 cmd.Parameters.AddWithValue("@srfsl", srfsl);
                 cmd.Parameters.AddWithValue("@moin", moin);
                 cmd.Parameters.AddWithValue("@HSB", hsb);
 
-                cmd.Parameters.AddWithValue("@Dt_Tavalod", string.IsNullOrWhiteSpace(dtTavalod) || dtTavalod == "0" ? "0" : dtTavalod.Trim());
-                cmd.Parameters.AddWithValue("@mobile", string.IsNullOrWhiteSpace(mobile) || mobile == "0" ? "0" : mobile.Trim());
-                cmd.Parameters.AddWithValue("@Tell", string.IsNullOrWhiteSpace(tell) || tell == "0" ? "0" : tell.Trim());
-                cmd.Parameters.AddWithValue("@Addres_mk", string.IsNullOrWhiteSpace(address) || address == "0" ? "0" : address.Trim());
+                cmd.Parameters.AddWithValue("@Dt_Tavalod", string.IsNullOrWhiteSpace(dtTavalod) || dtTavalod.Trim() == "0" ? (object)DBNull.Value : dtTavalod.Trim());
+                cmd.Parameters.AddWithValue("@mobile", string.IsNullOrWhiteSpace(mobile) || mobile.Trim() == "0" ? (object)DBNull.Value : mobile.Trim());
+                cmd.Parameters.AddWithValue("@Tell", string.IsNullOrWhiteSpace(tell) || tell.Trim() == "0" ? (object)DBNull.Value : tell.Trim());
+                cmd.Parameters.AddWithValue("@Addres_mk", string.IsNullOrWhiteSpace(address) || address.Trim() == "0" ? (object)DBNull.Value : address.Trim());
                 cmd.ExecuteNonQuery();
             }
         }
@@ -858,18 +858,17 @@ namespace Senik.DataTransformer.Services
             string stateName = rowData.GetValueOrDefault("وضعیت چک") ?? "";
             byte stateId = stateCache.TryGetValue(stateName, out byte s) ? s : throw new Exception($"وضعیت «{stateName}» در پایگاه داده تعریف نشده است.");
 
-            // فیلتر هوشمند کلمه "بانک"
-            string rawBankName = rowData.GetValueOrDefault("بانک") ?? "";
-            string cleanBankName = rawBankName.Replace("بانک", "").Trim();
+            // انطباق دقیق نام بانک (بدون حذف خودکار کلمه بانک به دلیل وجود بانک‌هایی نظیر «پست بانک»)
+            string rawBankName = rowData.GetValueOrDefault("بانک")?.Trim().Replace("ي", "ی").Replace("ك", "ک") ?? "";
             object finalBankId = DBNull.Value;
 
-            if (!string.IsNullOrWhiteSpace(cleanBankName))
+            if (!string.IsNullOrWhiteSpace(rawBankName))
             {
-                var foundBank = bankCache.FirstOrDefault(b => b.Key.Equals(cleanBankName, StringComparison.OrdinalIgnoreCase));
+                var foundBank = bankCache.FirstOrDefault(b => b.Key.Equals(rawBankName, StringComparison.OrdinalIgnoreCase));
                 if (foundBank.Key != null)
                     finalBankId = foundBank.Value;
                 else
-                    throw new Exception($"بانک «{rawBankName}» در سیستم تعریف نشده است. (نام بانک باید دقیق باشد).");
+                    throw new Exception($"بانک «{rawBankName}» در سیستم تعریف نشده است. (نام بانک باید دقیقاً مطابق با نام‌های ثبت‌شده در سیستم باشد).");
             }
 
             string rawShob = string.IsNullOrWhiteSpace(rowData.GetValueOrDefault("شعبه")) ? "" : rowData["شعبه"].Trim();

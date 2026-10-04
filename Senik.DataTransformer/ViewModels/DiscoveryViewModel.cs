@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Senik.DataTransformer.Core;
@@ -17,18 +17,55 @@ namespace Senik.DataTransformer.ViewModels
         public CheckViewModel CheckVM { get; } = new CheckViewModel();
 
         [ObservableProperty] private object _currentViewModel;
-        [ObservableProperty] private bool _isKalaTabSelected = true;
+        [ObservableProperty] private bool _isKalaTabSelected;
         [ObservableProperty] private bool _isPersonTabSelected;
         [ObservableProperty] private bool _isCheckTabSelected;
 
         public DiscoveryViewModel()
         {
-            CurrentViewModel = KalaVM;
+            switch (AppState.LastActiveTab)
+            {
+                case "Person":
+                    _isPersonTabSelected = true;
+                    _currentViewModel = PersonVM;
+                    break;
+                case "Check":
+                    _isCheckTabSelected = true;
+                    _currentViewModel = CheckVM;
+                    break;
+                default:
+                    _isKalaTabSelected = true;
+                    _currentViewModel = KalaVM;
+                    break;
+            }
         }
 
-        partial void OnIsKalaTabSelectedChanged(bool value) { if (value) CurrentViewModel = KalaVM; }
-        partial void OnIsPersonTabSelectedChanged(bool value) { if (value) CurrentViewModel = PersonVM; }
-        partial void OnIsCheckTabSelectedChanged(bool value) { if (value) CurrentViewModel = CheckVM; }
+        partial void OnIsKalaTabSelectedChanged(bool value)
+        {
+            if (value)
+            {
+                CurrentViewModel = KalaVM;
+                AppState.LastActiveTab = "Kala";
+            }
+        }
+
+        partial void OnIsPersonTabSelectedChanged(bool value)
+        {
+            if (value)
+            {
+                CurrentViewModel = PersonVM;
+                AppState.LastActiveTab = "Person";
+            }
+        }
+
+        partial void OnIsCheckTabSelectedChanged(bool value)
+        {
+            if (value)
+            {
+                CurrentViewModel = CheckVM;
+                AppState.LastActiveTab = "Check";
+            }
+        }
 
         [RelayCommand]
         private void GlobalValidateAndProceed()
@@ -112,6 +149,10 @@ namespace Senik.DataTransformer.ViewModels
                 payload.CheckMappings = CheckVM.SavedMappings;
                 MergeReports(payload.CombinedReport, report);
             }
+
+            if (kalaConfirmed && !personConfirmed && !checkConfirmed) AppState.LastActiveTab = "Kala";
+            else if (personConfirmed && !kalaConfirmed && !checkConfirmed) AppState.LastActiveTab = "Person";
+            else if (checkConfirmed && !kalaConfirmed && !personConfirmed) AppState.LastActiveTab = "Check";
 
             WeakReferenceMessenger.Default.Send(new OpenConfirmDialogMessage { ExecutionPayload = payload });
         }
