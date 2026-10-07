@@ -176,8 +176,12 @@ namespace Senik.DataTransformer.Services
 
                                 InsertTblPerson(sqlConnection, transaction, rowData, currentId);
 
-                                if (rowData.TryGetValue("تلفن", out string? tell) && !string.IsNullOrWhiteSpace(tell) && tell.Trim() != "0")
-                                    InsertTblPersonTell(sqlConnection, transaction, currentId, tell);
+                                if (rowData.TryGetValue("تلفن", out string? tell))
+                                {
+                                    string cleanTell = CleanOptionalString(tell);
+                                    if (!string.IsNullOrEmpty(cleanTell))
+                                        InsertTblPersonTell(sqlConnection, transaction, currentId, cleanTell);
+                                }
 
                                 InsertMaster(sqlConnection, transaction, rowData, currentId);
                                 InsertTR(sqlConnection, transaction, rowData);
@@ -713,6 +717,14 @@ namespace Senik.DataTransformer.Services
         // ====================================================================
         // 👤 توابع درج جداول اشخاص
         // ====================================================================
+        private static string CleanOptionalString(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return string.Empty;
+            string trimmed = value.Trim();
+            if (trimmed == "0" || trimmed.Equals("null", StringComparison.OrdinalIgnoreCase)) return string.Empty;
+            return trimmed;
+        }
+
         private void InsertTblPerson(SqlConnection conn, SqlTransaction trans, Dictionary<string, string> rowData, string shOzviat)
         {
             rowData.TryGetValue("نام", out string? name);
@@ -741,18 +753,18 @@ namespace Senik.DataTransformer.Services
             using (var cmd = new SqlCommand(query, conn, trans))
             {
                 cmd.Parameters.AddWithValue("@sh_ozviat", shOzviat.Trim());
-                cmd.Parameters.AddWithValue("@name", string.IsNullOrWhiteSpace(name) ? "" : name.Trim());
-                cmd.Parameters.AddWithValue("@Famil", string.IsNullOrWhiteSpace(famil) || famil.Trim() == "0" ? (object)DBNull.Value : famil.Trim());
-                cmd.Parameters.AddWithValue("@FatherName", string.IsNullOrWhiteSpace(fatherName) || fatherName.Trim() == "0" ? (object)DBNull.Value : fatherName.Trim());
+                cmd.Parameters.AddWithValue("@name", CleanOptionalString(name));
+                cmd.Parameters.AddWithValue("@Famil", CleanOptionalString(famil));
+                cmd.Parameters.AddWithValue("@FatherName", CleanOptionalString(fatherName));
 
                 cmd.Parameters.AddWithValue("@srfsl", srfsl);
                 cmd.Parameters.AddWithValue("@moin", moin);
                 cmd.Parameters.AddWithValue("@HSB", hsb);
 
-                cmd.Parameters.AddWithValue("@Dt_Tavalod", string.IsNullOrWhiteSpace(dtTavalod) || dtTavalod.Trim() == "0" ? (object)DBNull.Value : dtTavalod.Trim());
-                cmd.Parameters.AddWithValue("@mobile", string.IsNullOrWhiteSpace(mobile) || mobile.Trim() == "0" ? (object)DBNull.Value : mobile.Trim());
-                cmd.Parameters.AddWithValue("@Tell", string.IsNullOrWhiteSpace(tell) || tell.Trim() == "0" ? (object)DBNull.Value : tell.Trim());
-                cmd.Parameters.AddWithValue("@Addres_mk", string.IsNullOrWhiteSpace(address) || address.Trim() == "0" ? (object)DBNull.Value : address.Trim());
+                cmd.Parameters.AddWithValue("@Dt_Tavalod", CleanOptionalString(dtTavalod));
+                cmd.Parameters.AddWithValue("@mobile", CleanOptionalString(mobile));
+                cmd.Parameters.AddWithValue("@Tell", CleanOptionalString(tell));
+                cmd.Parameters.AddWithValue("@Addres_mk", CleanOptionalString(address));
                 cmd.ExecuteNonQuery();
             }
         }
@@ -860,7 +872,7 @@ namespace Senik.DataTransformer.Services
 
             // انطباق دقیق نام بانک (بدون حذف خودکار کلمه بانک به دلیل وجود بانک‌هایی نظیر «پست بانک»)
             string rawBankName = rowData.GetValueOrDefault("بانک")?.Trim().Replace("ي", "ی").Replace("ك", "ک") ?? "";
-            object finalBankId = DBNull.Value;
+            int finalBankId = 0;
 
             if (!string.IsNullOrWhiteSpace(rawBankName))
             {
