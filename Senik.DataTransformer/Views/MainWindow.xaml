@@ -54,9 +54,7 @@
                             <Image Source="pack://application:,,,/Assets/Images/Logo.jpg" Width="40" Height="40" Margin="0,0,15,0" Stretch="Uniform"/>
                             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                                 <TextBlock x:Name="TitleText" Text="سیستم تبدیل اطلاعات سه نیک" Foreground="{DynamicResource MaterialDesignBody}" FontSize="20" FontWeight="Bold" FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn Bold"/>
-                                <TextBlock x:Name="StableText" Text="BETA7" Foreground="Red" FontSize="13" TextAlignment="Center" Margin="265,-35,0,0" FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn Light"/>
-
-                                <TextBlock x:Name="VersionText" Text="نسخه ۱.۳.۰" Foreground="{DynamicResource MaterialDesignBody}" FontSize="13" TextAlignment="Center" Margin="252,-20,0,0" FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn Light"/>
+                                <TextBlock x:Name="VersionText" Text="نسخه ۱.۳.۱" Foreground="{DynamicResource MaterialDesignBody}" FontSize="13" TextAlignment="Center" Margin="252,-20,0,0" FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn Light"/>
                             </StackPanel>
                         </StackPanel>
 
@@ -72,7 +70,7 @@
                             <Button x:Name="BtnMinimize" Width="50" Height="40" Background="Transparent" BorderThickness="0" Cursor="Hand" Click="Minimize_Click" Style="{StaticResource MaterialDesignFlatButton}" materialDesign:RippleAssist.Feedback="#27C93F" materialDesign:ButtonAssist.CornerRadius="20">
                                 <Ellipse Width="14" Height="14" Fill="#27C93F" Stroke="#1AAB29" StrokeThickness="1"/>
                             </Button>
-<Button Click="BtnHelpTour_Click" ToolTip="راهنمای استفاده از سیستم"
+<Button x:Name="BtnHelpTour" Visibility="Collapsed" Click="BtnHelpTour_Click" ToolTip="راهنمای استفاده از سیستم"
         Style="{StaticResource MaterialDesignToolButton}" 
         Foreground="{DynamicResource MaterialDesignBody}" 
         Width="35" Height="35" Margin="0,0,5,0">

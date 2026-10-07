@@ -102,9 +102,10 @@ namespace Senik.DataTransformer.Services
                 string batContent = 
                     "@echo off\r\n" +
                     "chcp 65001 >nul\r\n" +
-                    $"set PID={pid}\r\n" +
-                    $"set TARGET=\"{currentExePath}\"\r\n" +
-                    $"set SOURCE=\"{TempFilePath}\"\r\n" +
+                    $"set \"PID={pid}\"\r\n" +
+                    $"set \"TARGET={currentExePath}\"\r\n" +
+                    $"set \"SOURCE={TempFilePath}\"\r\n" +
+                    "set /a RETRY_COUNT=0\r\n" +
                     "\r\n" +
                     ":wait_loop\r\n" +
                     "tasklist /fi \"PID eq %PID%\" 2>nul | find \"%PID%\" >nul\r\n" +
@@ -117,22 +118,26 @@ namespace Senik.DataTransformer.Services
                     "timeout /t 1 /nobreak >nul\r\n" +
                     "\r\n" +
                     ":copy_loop\r\n" +
-                    "copy /y %SOURCE% %TARGET% >nul 2>&1\r\n" +
+                    "set /a RETRY_COUNT+=1\r\n" +
+                    "copy /y \"%SOURCE%\" \"%TARGET%\" >nul 2>&1\r\n" +
                     "if errorlevel 1 (\r\n" +
+                    "    if %RETRY_COUNT% GEQ 30 goto copy_failed\r\n" +
                     "    timeout /t 1 /nobreak >nul\r\n" +
                     "    goto copy_loop\r\n" +
                     ")\r\n" +
                     "\r\n" +
-                    ":: پاکسازی فایل دانلود شده موقت\r\n" +
-                    "del /f /q %SOURCE% >nul 2>&1\r\n" +
+                    ":: پاکسازی فایل دانلود شده موقت و اجرای فایل جدید\r\n" +
+                    "del /f /q \"%SOURCE%\" >nul 2>&1\r\n" +
+                    "start \"\" \"%TARGET%\"\r\n" +
+                    "(goto) 2>nul & del \"%~f0\"\r\n" +
+                    "exit /b 0\r\n" +
                     "\r\n" +
-                    ":: راه‌اندازی فایل به‌روزرسانی شده\r\n" +
-                    "start \"\" %TARGET%\r\n" +
-                    "\r\n" +
-                    ":: حذف خود فایل اسکریپت\r\n" +
+                    ":copy_failed\r\n" +
+                    "del /f /q \"%SOURCE%\" >nul 2>&1\r\n" +
+                    "start \"\" \"%TARGET%\"\r\n" +
                     "(goto) 2>nul & del \"%~f0\"\r\n";
 
-                File.WriteAllText(batPath, batContent, System.Text.Encoding.Default);
+                File.WriteAllText(batPath, batContent, System.Text.Encoding.UTF8);
 
                 var startInfo = new ProcessStartInfo
                 {
