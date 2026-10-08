@@ -100,9 +100,9 @@ namespace Senik.DataTransformer.ViewModels
             Mappings.Add(new ColumnMappingItem { DisplayName = "بدهکار", TargetField = "TR.bed", IsMandatory = true });
             Mappings.Add(new ColumnMappingItem { DisplayName = "بستانکار", TargetField = "TR.bes", IsMandatory = true });
             Mappings.Add(new ColumnMappingItem { DisplayName = "تاریخ ثبت", TargetField = "TR.DateR", IsMandatory = true });
-            Mappings.Add(new ColumnMappingItem { DisplayName = "شرح", TargetField = "TR.sharh", IsMandatory = true });
 
             // اختیاری‌ها
+            Mappings.Add(new ColumnMappingItem { DisplayName = "شرح", TargetField = "TR.sharh", IsMandatory = false });
             Mappings.Add(new ColumnMappingItem { DisplayName = "نام خانوادگی", TargetField = "TblPerson.Famil", IsMandatory = false });
             Mappings.Add(new ColumnMappingItem { DisplayName = "نام پدر", TargetField = "TblPerson.FatherName", IsMandatory = false });
             Mappings.Add(new ColumnMappingItem { DisplayName = "تاریخ تولد", TargetField = "TblPerson.Dt_Tavalod", IsMandatory = false });

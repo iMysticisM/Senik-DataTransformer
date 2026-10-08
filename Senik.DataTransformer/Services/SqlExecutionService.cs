@@ -820,7 +820,7 @@ namespace Senik.DataTransformer.Services
             if (string.IsNullOrWhiteSpace(dateR)) throw new Exception("تاریخ ثبت نمی‌تواند خالی باشد.");
 
             rowData.TryGetValue("شرح", out string? sharh);
-            if (string.IsNullOrWhiteSpace(sharh)) throw new Exception("شرح نمی‌تواند خالی باشد.");
+            string finalSharh = CleanOptionalString(sharh);
 
             long shob = 0;
             if (rowData.TryGetValue("شعبه", out string? shobStr) && !string.IsNullOrWhiteSpace(shobStr))
@@ -839,7 +839,7 @@ namespace Senik.DataTransformer.Services
                 cmd.Parameters.AddWithValue("@bed", bed);
                 cmd.Parameters.AddWithValue("@bes", bes);
                 cmd.Parameters.AddWithValue("@DateR", dateR.Trim());
-                cmd.Parameters.AddWithValue("@sharh", sharh.Trim());
+                cmd.Parameters.AddWithValue("@sharh", finalSharh);
                 cmd.Parameters.AddWithValue("@SanadM", sanadM);
                 cmd.Parameters.AddWithValue("@Shob", shob);
                 cmd.ExecuteNonQuery();

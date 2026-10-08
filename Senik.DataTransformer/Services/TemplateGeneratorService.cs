@@ -215,9 +215,9 @@ namespace Senik.DataTransformer.Services
                 list.Add(new TemplateColumnMeta { DisplayName = "بدهکار", IsMandatory = true, DataType = "عددی", EmptyRule = "در صورت عدم مانده 0 درج شود", Notes = "مانده بدهکار اول دوره. قانون انحصار: اگر بدهکار > 0 باشد، بستانکار حتماً 0 است", SampleValue = 2500000 });
                 list.Add(new TemplateColumnMeta { DisplayName = "بستانکار", IsMandatory = true, DataType = "عددی", EmptyRule = "در صورت عدم مانده 0 درج شود", Notes = "مانده بستانکار اول دوره. قانون انحصار: اگر بستانکار > 0 باشد، بدهکار حتماً 0 است", SampleValue = 0 });
                 list.Add(new TemplateColumnMeta { DisplayName = "تاریخ ثبت", IsMandatory = true, DataType = "تاریخ شمسی (YYYY/MM/DD)", EmptyRule = "الزامی", Notes = "تاریخ ثبت سند افتتاحیه (مثال: 1403/01/15)", SampleValue = "1403/01/15" });
-                list.Add(new TemplateColumnMeta { DisplayName = "شرح", IsMandatory = true, DataType = "متنی", EmptyRule = "الزامی", Notes = "شرح سند افتتاحیه", SampleValue = "سند افتتاحیه طرف‌حساب" });
 
-                // اختیاری‌ها (فیلدهای هویتی در صورت خالی بودن باید حتماً Null بمانند و نباید صفر شوند)
+                // اختیاری‌ها
+                list.Add(new TemplateColumnMeta { DisplayName = "شرح", IsMandatory = false, DataType = "متنی", EmptyRule = "خالی بماند (اختیاری است)", Notes = "شرح سند افتتاحیه؛ در صورت خالی بودن مقداری درج نمی‌شود", SampleValue = "سند افتتاحیه طرف‌حساب" });
                 list.Add(new TemplateColumnMeta { DisplayName = "نام خانوادگی", IsMandatory = false, DataType = "متنی", EmptyRule = "حتماً خالی (Null) بماند", Notes = "نام خانوادگی شخص. اگر خالی است هرگز 0 نگذارید تا در نام فرد عدد صفر درج نشود", SampleValue = "محمدی" });
                 list.Add(new TemplateColumnMeta { DisplayName = "نام پدر", IsMandatory = false, DataType = "متنی", EmptyRule = "حتماً خالی (Null) بماند", Notes = "نام پدر شخص", SampleValue = "رضا" });
                 list.Add(new TemplateColumnMeta { DisplayName = "تاریخ تولد", IsMandatory = false, DataType = "تاریخ شمسی", EmptyRule = "حتماً خالی (Null) بماند", Notes = "تاریخ تولد شخص", SampleValue = "1365/04/10" });
